@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 
-const API_URL = "http://localhost:8000";
+const API_URL = "https://setlu-agent.up.railway.app" #"http://localhost:8000";
 
 const PROFILES = ["Recruiter", "Technical Hiring Manager", "General"];
 
