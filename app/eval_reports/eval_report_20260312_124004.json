@@ -1,0 +1,71 @@
+{
+  "timestamp": "20260312_124004",
+  "model": "see config.py",
+  "judge_model": "gpt-4o-mini",
+  "nb_questions": 5,
+  "summary": {
+    "avg_latency_s": 3.625,
+    "avg_precision": 0.63,
+    "avg_faithfulness": 9.0,
+    "avg_relevancy": 9.0,
+    "avg_completeness": 9.0,
+    "avg_global_score": 9.0
+  },
+  "details": [
+    {
+      "question": "What are Maguette's main technical skills?",
+      "profile": "Technical Hiring Manager",
+      "response": "Maguette's main technical skills include supervised and unsupervised machine learning, deep learning architectures such as CNNs, RNNs, and Transformers, and multimodal models combining structured data, text, and temporal signals. In NLP and large language models, she is proficient with Transformers (BERT, GPT-like), Retrieval-Augmented Generation (RAG), LangChain, prompt engineering, and vector databases like FAISS. She also has strong expertise in feature engineering, model evaluation, and validation.",
+      "latency_s": 3.82,
+      "precision_keywords": 0.83,
+      "faithfulness": 10.0,
+      "relevancy": 10.0,
+      "completeness": 10.0,
+      "global_score": 10.0
+    },
+    {
+      "question": "Can you summarize Maguette's professional background?",
+      "profile": "Recruiter",
+      "response": "Maguette MBAYE is a Doctor in Artificial Intelligence with a specialization in multimodal machine learning applied to medical data. She has five years of experience as a Ph.D. student focused on machine learning and multimodal modeling at leading research institutions including Institut Curie, Mines Paris PSL, and INSERM in Paris. Her expertise spans models that combine structured data, text, and temporal signals, with a strong interest in developing intelligent, interpretable systems for real-world healthcare applications. She is proficient in Python, PyTorch, Transformers, and modern data science tools, and is seeking roles as an AI research scientist or applied machine learning specialist.",
+      "latency_s": 4.523,
+      "precision_keywords": 0.8,
+      "faithfulness": 10.0,
+      "relevancy": 10.0,
+      "completeness": 10.0,
+      "global_score": 10.0
+    },
+    {
+      "question": "What projects has Maguette worked on?",
+      "profile": "Technical Hiring Manager",
+      "response": "The provided documents do not include specific details about the projects Maguette has worked on. However, her PhD and expertise focus on machine learning multimodal modeling applied to medical data, combining structured data, text, and temporal signals. If you need detailed project information, please provide additional context or documents.",
+      "latency_s": 3.32,
+      "precision_keywords": 0.0,
+      "faithfulness": 5.0,
+      "relevancy": 5.0,
+      "completeness": 5.0,
+      "global_score": 5.0
+    },
+    {
+      "question": "How can I contact Maguette?",
+      "profile": "General",
+      "response": "You can contact Maguette MBAYE by email at ndeyemaguettemb@gmail.com or by phone at +33 6 64 67 93 74. You can also reach out to her via her LinkedIn profile.",
+      "latency_s": 3.441,
+      "precision_keywords": 1.0,
+      "faithfulness": 10.0,
+      "relevancy": 10.0,
+      "completeness": 10.0,
+      "global_score": 10.0
+    },
+    {
+      "question": "What is Maguette's educational background?",
+      "profile": "Recruiter",
+      "response": "Maguette MBAYE holds a Ph.D. in Bioinformatics with a focus on AI for cancer prognosis from Mines Paris PSL, France (2019–2024). She also earned a Master’s degree in Biomathematics – Bioinformatics and a Bachelor’s degree in the same field from Cheikh Anta DIOP University of Dakar, Senegal (Master: 2016–2019, Bachelor: 2015–2016).",
+      "latency_s": 3.02,
+      "precision_keywords": 0.5,
+      "faithfulness": 10.0,
+      "relevancy": 10.0,
+      "completeness": 10.0,
+      "global_score": 10.0
+    }
+  ]
+}

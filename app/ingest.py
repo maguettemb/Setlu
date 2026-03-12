@@ -25,8 +25,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-#import app.
-import config as config
+import app.config as config
 
 # ---------------------------------------------------------------------------
 # Environment

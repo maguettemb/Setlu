@@ -1,8 +1,8 @@
 import os
 from typing import Dict, List
-
 from dotenv import load_dotenv
-
+from langchain_community.retrievers import BM25Retriever
+from langchain_classic.retrievers.ensemble import EnsembleRetriever
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_community.chat_message_histories import ChatMessageHistory
@@ -16,9 +16,14 @@ from langchain_core.example_selectors.length_based import LengthBasedExampleSele
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_core.runnables.history import RunnableWithMessageHistory
-
+from concurrent.futures import ThreadPoolExecutor
 import app.config as config
 
+from langchain_core.globals import set_llm_cache
+from langchain_core.caches import InMemoryCache
+#from langchain_community.cache import InMemoryCache
+
+set_llm_cache(InMemoryCache())
 # ---------------------------------------------------------------------------
 # Environment
 # ---------------------------------------------------------------------------
@@ -242,8 +247,10 @@ class Chatbot:
         """Concatenate Document page_content strings."""
         return "\n\n".join(doc.page_content for doc in docs)
 
+    
     def _build_retriever(self):
         """Load the FAISS vectorstore and return a retriever."""
+
         embeddings = OpenAIEmbeddings(model=config.EMBEDDING_MODEL_NAME)
         vectorstore = FAISS.load_local(
             config.VECTORSTORE_DIR,
@@ -255,6 +262,35 @@ class Chatbot:
             search_type="similarity",
             search_kwargs={"k": config.MAX_RETRIEVALS},
         )
+    
+    #Hybrid search with similary and key word matching
+    def _build_retriever(self):
+        """Hybrid retriever : FAISS (sémantique) + BM25 (mots-clés)."""
+
+        # ── FAISS (semantic) ──
+        embeddings = OpenAIEmbeddings(model=config.EMBEDDING_MODEL_NAME)
+        vectorstore = FAISS.load_local(
+            config.VECTORSTORE_DIR,
+            embeddings,
+            allow_dangerous_deserialization=True,
+        )
+        faiss_retriever = vectorstore.as_retriever(
+            search_type="similarity",
+            search_kwargs={"k": config.MAX_RETRIEVALS},
+        )
+
+        # ── BM25 (keyword) ──
+        # Charge tous les docs du vectorstore pour BM25
+        all_docs = list(vectorstore.docstore._dict.values())
+        bm25_retriever = BM25Retriever.from_documents(all_docs)
+        bm25_retriever.k = config.MAX_RETRIEVALS
+
+        # ── Ensemble 50% FAISS + 50% BM25 ──
+        return EnsembleRetriever(
+            retrievers=[faiss_retriever, bm25_retriever],
+            weights=[0.5, 0.5],
+        )
+
 
     def _rerank_documents(
         self, docs: List[Document], question: str
@@ -287,7 +323,27 @@ class Chatbot:
         # Sort descending and keep top_n
         scored.sort(key=lambda x: x[0], reverse=True)
         return [doc for _, doc in scored[: self.rerank_top_n]]
+    
+    def _rerank_documents(self, docs, question):
+        judge_llm = ChatOpenAI(temperature=0, model_name="gpt-4o-mini")
+        rerank_chain = RERANKING_PROMPT | judge_llm | StrOutputParser()
 
+        def score_doc(doc):
+            try:
+                raw = rerank_chain.invoke({
+                    "question": question,
+                    "document": doc.page_content
+                })
+                return float(raw.strip()), doc
+            except:
+                return 0.0, doc
+
+        # Score tous les docs en parallèle
+        with ThreadPoolExecutor(max_workers=len(docs)) as executor:
+            scored = list(executor.map(score_doc, docs))
+
+        scored.sort(key=lambda x: x[0], reverse=True)
+        return [doc for _, doc in scored[:self.rerank_top_n]]
     # ------------------------------------------------------------------
     # Chain assembly & invocation
     # ------------------------------------------------------------------
@@ -349,6 +405,44 @@ class Chatbot:
         """Build the prompt, run the RAG chain, and return the answer."""
         return self.get_answer()
 
+
+
+    def stream_answer(self):
+        """Stream the answer token by token."""
+        retriever = self._build_retriever()
+        prompt    = self._build_chat_prompt()
+        llm       = ChatOpenAI(
+            temperature=config.CHAT_MODEL_TEMPERATURE,
+            model_name=config.MODEL_NAME,
+        )
+
+        rag_chain = (
+            {
+                "input":   RunnableLambda(lambda x: x["input"]),
+                "context": RunnableLambda(lambda x: self._format_docs(
+                    self._rerank_documents(
+                        retriever.invoke(x["input"]),
+                        question=x["input"],
+                    )
+                )),
+                "history": RunnableLambda(lambda x: x.get("history", [])),
+            }
+            | prompt
+            | llm
+            | StrOutputParser()
+        )
+
+        chain_with_history = RunnableWithMessageHistory(
+            rag_chain,
+            get_session_history=get_session_history,
+            input_messages_key="input",
+            history_messages_key="history",
+        )
+
+        yield from chain_with_history.stream(
+            {"input": self.user_message},
+            config={"configurable": {"session_id": self.session_id}},
+        )
 
 # ---------------------------------------------------------------------------
 # Quick smoke-test

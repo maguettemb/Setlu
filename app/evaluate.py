@@ -1,3 +1,4 @@
+
 """
 evaluate.py
 -----------
@@ -30,17 +31,37 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 from app.chatbot import Chatbot
-
+import app.config as config
 # ---------------------------------------------------------------------------
 # Environment
 # ---------------------------------------------------------------------------
+import os 
+import ssl
+import httpx
+
 load_dotenv()
 
-# ---------------------------------------------------------------------------
-# Config
-# ---------------------------------------------------------------------------
-REPORT_DIR = Path("app/eval_reports")   # dossier de sauvegarde des rapports
-JUDGE_MODEL = "gpt-4o-mini"             # modèle utilisé pour le scoring
+# Chemin absolu vers le cert Zscaler
+_CERT = "/Users/maguette/zscaler.pem"
+
+# Créer un contexte SSL custom avec le cert Zscaler
+_ssl_ctx = ssl.create_default_context()
+_ssl_ctx.load_verify_locations(_CERT)
+
+# Forcer httpx à utiliser ce contexte
+_http_client  = httpx.Client(verify=_CERT)
+_async_client = httpx.AsyncClient(verify=_CERT)
+
+# Patcher les variables d'environnement pour openai/httpx
+os.environ["SSL_CERT_FILE"]      = _CERT
+os.environ["REQUESTS_CA_BUNDLE"] = _CERT
+# ── FIN DU PATCH ──
+
+# S'assurer que le cert est bien chargé avant httpx
+#cert = os.getenv("SSL_CERT_FILE", "")
+#if cert:
+#    os.environ["SSL_CERT_FILE"] = cert
+#    os.environ["REQUESTS_CA_BUNDLE"] = cert
 
 # ---------------------------------------------------------------------------
 # Jeu de test
@@ -159,7 +180,7 @@ def llm_score(prompt: ChatPromptTemplate, variables: Dict[str, str]) -> float:
     
     Retourne 0.0 en cas de réponse inattendue.
     """
-    judge = ChatOpenAI(temperature=0, model_name=JUDGE_MODEL)
+    judge = ChatOpenAI(temperature=0, model_name=config.JUDGE_MODEL)
     chain = prompt | judge | StrOutputParser()
     try:
         raw = chain.invoke(variables)
@@ -285,14 +306,14 @@ def run_evaluation() -> None:
     # -----------------------------------------------------------------------
     # Sauvegarde du rapport JSON
     # -----------------------------------------------------------------------
-    REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    config.REPORT_DIR.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    report_path = REPORT_DIR / f"eval_report_{timestamp}.json"
+    report_path = config.REPORT_DIR / f"eval_report_{timestamp}.json"
 
     report = {
         "timestamp": timestamp,
         "model": "see config.py",
-        "judge_model": JUDGE_MODEL,
+        "judge_model": config.JUDGE_MODEL,
         "nb_questions": n,
         "summary": {
             "avg_latency_s": avg_latency,

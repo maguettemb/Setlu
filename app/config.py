@@ -11,7 +11,7 @@ EMBEDDING_MODEL_NAME = "text-embedding-3-small"
 MODEL_NAME = "gpt-4.1-mini"    
 CHAT_MODEL_TEMPERATURE = 0.0
 
-CHUNK_SIZE = 500  
+CHUNK_SIZE = 200  
 CHUNK_OVERLAP = 50
 MAX_RETRIEVALS = 5  
 
@@ -26,3 +26,10 @@ SUMMARIZE_OLD_HISTORY = True
 DOCSTRINGS_CONTEXT_LEN = 10
 PAGES_CONTEXT_LEN = 10
 MIN_TIME_BETWEEN_REQUESTS = datetime.timedelta(seconds=3)
+
+# ---------------------------------------------------------------------------
+# Evaluation Config
+# ---------------------------------------------------------------------------
+
+REPORT_DIR = Path("app/eval_reports")   # dossier de sauvegarde des rapports
+JUDGE_MODEL = "gpt-4o-mini"             # modèle utilisé pour le scoring

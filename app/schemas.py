@@ -1,7 +1,13 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class ChatRequest(BaseModel):
-    session_id: str 
-    user_message: str
-    profile_option: str
+    message: str
+    profile: Optional[str] = "General"
+    session_id: Optional[str] = "default"
+
+class ChatResponse(BaseModel):
+    response: str
+    session_id: str
+    profile: str
 
