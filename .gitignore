@@ -6,6 +6,9 @@ dist/
 wheels/
 *.egg-info
 
+## eval reports
+app/eval_reports
+
 # Environment
 .env
 .venv/
