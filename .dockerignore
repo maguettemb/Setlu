@@ -1,0 +1,8 @@
+.venv
+.env
+__pycache__
+*.pyc
+.git
+setlu-frontend
+app/eval_reports
+.DS_Store
